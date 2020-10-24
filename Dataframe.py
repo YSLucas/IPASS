@@ -4,12 +4,12 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 
-def getDummies():
+def getDummies(filename):
     """
         Maakt een vector die kan worden gebruikt voor logistische regressie
     """
     #   Maakt een dataframe van .csv met data
-    df = pd.read_csv('games-NoDupes.csv')
+    df = pd.read_csv(filename + '.csv')
 
     #   Zet 'result'-kolom om in dummies, en dropt onnodige kolommen
     dummie = pd.get_dummies(df, columns=['result'], drop_first=True)
@@ -24,7 +24,15 @@ def getDummies():
     result = pd.concat([mergedDummies, dummie], axis=1)
     # print(dummieTeam1.sample(5))
     # print(dummieTeam2.sample(5))
-    print(result.sample(5))
+    # print(result.sample(5))
+    return result
 
-pd.set_option('display.max_columns', None)
-getDummies()
+# pd.set_option('display.max_columns', None)
+# getDummies("gamesAllServers9-8-CLEANv2")
+
+
+gameData = getDummies("gamesCombined-CLEANv3")
+X_train, X_test, y_train, y_test = train_test_split(gameData.drop("result_Victory", axis=1), gameData["result_Victory"])
+model = LogisticRegression()
+model.fit(X_train, y_train)
+print(model.score(X_test, y_test))
