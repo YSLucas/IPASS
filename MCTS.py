@@ -1,7 +1,11 @@
+from logging import NullHandler
 import random
 from random import choice
 import numpy as np
 import time
+import pickle
+
+MODEL_PATH = 'models/lr_model_1.pkl'
 
 class Draft:
     
@@ -31,8 +35,8 @@ class Mcts:
         self.state = state
         self.incoming_action = incoming_action
         self.parent = parent
-        self.total_sim_reward = total_sim_reward
-        self.visit_count = visit_count
+        self.total_sim_reward = total_sim_reward # Q(v)
+        self.visit_count = visit_count # N(v)
         self.children = []
         self.tried_actions = set()
         self.remaining_actions = self.state.get_actions()
@@ -42,39 +46,62 @@ class Mcts:
         self.remaining_actions.remove(action)
         child = Mcts(self.state.get_next_state(action), action, self)
         self.children.append(child)
-        return child
+        return child # v'
 
-def bestChild(node, cp):
+def lrModel(s):
+    """
+    return:
+    """
+    model = pickle.load(open(MODEL_PATH, 'rb'))
+    
+
+def bestChild(node, c):
     """
     return: 
+    max(   Q(v') / N(v')   
+        +  c *  sqrt( ( 2 ln N(v) ) / N(v') ) 
+        )
     """
+    return max (
+                (node.total_sim_reward / node.visit_count) # exploitation
+                + c * np.sqrt( 1 / node.visit_count)       # exploration
+               )
 
-def expand(node):
+def treePolicy(node, c):
     """
     docstring
     """
-    pass
+    while node.is_terminal() is False:
+        if len(node.remaining_actions) != 0:
+            return node.expand()
+        else:
+            node = node.bestChild(node, c)
+    return node
 
-def treePolicy( node):
+def defaultPolicy(s, model):
+    """
+    docstring
+    Add compute_rewards() into this function
+    """
+    while s.is_terminal() is False:
+        pre = s.get_actions()
+        a = random.choice(pre)
+        s = s.get_next_state(a)
+    return lrModel(s)
+
+def uctSearch(time_limit,):
     """
     docstring
     """
-    pass
-
-def defaultPolicy(s):
-    """
-    docstring
-    """
-    pass
-
-def uctSearch(parameter_list):
-    """
-    docstring
-    """
-    pass
+    while time_limit > time:
+        pass
 
 def backup(node, delta):
     """
     docstring
     """
-    pass
+    while node is not None:
+        node.visit_count += 1
+        node.total_sim_reward += delta
+        delta -= delta  # niet zeker of deze line klopt
+        node = node.parent
