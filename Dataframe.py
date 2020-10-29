@@ -1,8 +1,12 @@
 import csv
 import pandas as pd
 import numpy as np
+import pickle
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
+
+
+# pd.set_option('display.max_columns', None)
 
 def getDummies(filename):
     """
@@ -24,15 +28,30 @@ def getDummies(filename):
     result = pd.concat([mergedDummies, dummie], axis=1)
     # print(dummieTeam1.sample(5))
     # print(dummieTeam2.sample(5))
-    # print(result.sample(5))
+    print(result.sample(5))
     return result
 
-# pd.set_option('display.max_columns', None)
-# getDummies("gamesAllServers9-8-CLEANv2")
+
+def getModel(filename):
+
+    gameData = getDummies(filename)
+    X_train, X_test, y_train, y_test = train_test_split(gameData.drop("result_Victory", axis=1), gameData["result_Victory"])
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+    print(model.score(X_test, y_test))
+    model
+
+    saveFileName = "lr_model_1.pkl"
+    with open(saveFileName, 'wb') as file:
+        pickle.dump(model, file)
 
 
-gameData = getDummies("gamesCombined-CLEANv3")
-X_train, X_test, y_train, y_test = train_test_split(gameData.drop("result_Victory", axis=1), gameData["result_Victory"])
-model = LogisticRegression()
-model.fit(X_train, y_train)
-print(model.score(X_test, y_test))
+# getModel("gamesCombined-CLEANv3")
+# gameData = getDummies("gamesCombined-CLEANv3")
+# X_train, X_test, y_train, y_test = train_test_split(gameData.drop("result_Victory", axis=1), gameData["result_Victory"])
+# model = LogisticRegression()
+# model.fit(X_train, y_train)
+# print(model.score(X_test, y_test))
+testX = np.zeros((1, 300))
+print(np.zeros((1, 300)))
+# model.predict()
