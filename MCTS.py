@@ -96,7 +96,7 @@ def bestChild(node, c):
     for x in child:
         res.append(
         (x.total_sim_reward / x.visit_count) # exploitation
-        + c * np.sqrt( np.log2(node.visit_count) / x.visit_count) # exploration
+        + c * np.sqrt( ( 2 * np.log(node.visit_count) ) / x.visit_count) # exploration
         ) 
     
     return max(res)
