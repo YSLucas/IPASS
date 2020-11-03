@@ -7,8 +7,8 @@ import pickle
 MODEL_PATH = 'models/lr_model_1.pkl'
 
 """
-Dit algoritme is gemodelleerd naar
- de pseudocode van Monte Carlo Tree Search UCT (http://ccg.doc.gold.ac.uk/ccg_old/teaching/ludic_computing/ludic16.pdf).
+Dit algoritme is gemodelleerd naar 
+de pseudocode van Monte Carlo Tree Search UCT (http://ccg.doc.gold.ac.uk/ccg_old/papers/browne_tciaig12_1.pdf, blz. 9).
 
 variabele in de pseudocode:
 v    = node
@@ -67,6 +67,9 @@ def lrModel(s):
     return:
     """
     model = pickle.load(open(MODEL_PATH, 'rb'))
+    state_vector = np.zeros((1, 300))
+    blue_vector = np.zeros((1, 150))
+    red_vector = np.zeros((1, 150))
 
 def expand(node):
     """
@@ -134,7 +137,11 @@ def uctSearch(time_limit):
 
     """
     while time_limit > time:
-        pass
+        v1 = treePolicy(root)
+        delta = defaultPolicy(state, model)
+        make_backup = backup(state, delta)
+    return bestChild(root, 0)
+        
 
 def backup(node, delta):
     """
@@ -144,5 +151,5 @@ def backup(node, delta):
     while node is not None:
         node.visit_count += 1 # N(v)
         node.total_sim_reward += delta # Q(v)
-        delta -= delta  # delta  -niet zeker of deze line klopt
+        delta = 1 - delta  # delta  -niet zeker of deze line klopt
         node = node.parent # v
