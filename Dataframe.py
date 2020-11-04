@@ -52,6 +52,6 @@ def getModel(filename):
 # model = LogisticRegression()
 # model.fit(X_train, y_train)
 # print(model.score(X_test, y_test))
-testX = np.zeros((1, 300))
-print(np.zeros((1, 300)))
+print(np.zeros((1, 5)))
+print(set(range(1, 5)))
 # model.predict()
