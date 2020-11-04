@@ -5,10 +5,10 @@ import time
 import pickle
 
 MODEL_PATH = 'models/lr_model_1.pkl'
+model = pickle.load(open(MODEL_PATH, 'rb'))
 
 """
-Dit algoritme is gemodelleerd naar 
-de pseudocode van Monte Carlo Tree Search UCT (http://ccg.doc.gold.ac.uk/ccg_old/papers/browne_tciaig12_1.pdf, blz. 9).
+Dit algoritme is gemodelleerd naar de pseudocode van Monte Carlo Tree Search UCT (http://ccg.doc.gold.ac.uk/ccg_old/papers/browne_tciaig12_1.pdf, blz. 9).
 
 variabele in de pseudocode:
 v    = node
@@ -37,10 +37,18 @@ class Draft:
             return False
 
     def get_actions(self):
-        pass
+        if self.terminal_state():
+            return None
+        if self.actions == None:
+            pass
+        return self.actions
 
-    def get_next_state(self):
-        pass
+    def get_next_state(self, action):
+        state = Draft(not self.blue_moves_next, self.blue_champions, self.red_champions, self.move_count+1)
+        if self.blue_moves_next:
+            state.blue_champions = self.blue_champions.union(action)
+        else:
+            state.red_champions = self.red_champions.union(action)
 
 class Mcts:
 
@@ -66,10 +74,16 @@ def lrModel(s):
     """
     return:
     """
-    model = pickle.load(open(MODEL_PATH, 'rb'))
-    state_vector = np.zeros((1, 300))
     blue_vector = np.zeros((1, 150))
     red_vector = np.zeros((1, 150))
+    for hero_blue in s.blue_champions:
+        blue_vector[hero_blue] = 1
+    for hero_red in s.red_champions:
+        red_vector[hero_red] = 1
+    combined = blue_vector + red_vector
+    blue_win_rate = model(combined)
+
+
 
 def expand(node):
     """
@@ -103,10 +117,6 @@ def bestChild(node, c):
     
     return max(res)
 
-    # return max (
-    #             (child.total_sim_reward / child.visit_count) # exploitation
-    #             + c * np.sqrt( (np.log(2) * node.visit_count) / child.visit_count)       # exploration
-    #            )
 
 def treePolicy(node, c):
     """
@@ -120,7 +130,7 @@ def treePolicy(node, c):
             node = node.bestChild(node, c) # v
     return node
 
-def defaultPolicy(s, model):
+def defaultPolicy(s):
     """
     Variables:
     s, a
@@ -136,10 +146,12 @@ def uctSearch(time_limit):
     Variables:
 
     """
-    while time_limit > time:
-        v1 = treePolicy(root)
-        delta = defaultPolicy(state, model)
-        make_backup = backup(state, delta)
+    timer = time.time()
+    root = Mcts(None)
+    while time_limit > (time.time() - timer):
+        v1 = treePolicy(root) #root node
+        delta = defaultPolicy(v1.state, model)
+        backup(v1.state, delta)
     return bestChild(root, 0)
         
 
