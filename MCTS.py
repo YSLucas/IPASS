@@ -50,13 +50,13 @@ class Draft:
             return []
         if self.actions == None:
             remaining_champions = champions.difference(self.blue_champions.union(self.red_champions)) # blue = [1, 6, 55] & red = [33, 7, 3] -> remaining_champions = [all champions] - [1, 3, 6, 7, 33, 55]
-            self.actions = list(itertools.combinations(remaining_champions, (10 - self.move_count)))
+            self.actions = list(itertools.combinations(remaining_champions, (10 - self.move_count))) # 10 moet misschien 5 zijn omdat er maar 5 champions in één team kunnen
         return self.actions
 
     def get_next_state(self, action):
         state = Draft(not self.blue_moves_next, self.blue_champions, self.red_champions, self.move_count+1)
         if self.blue_moves_next:
-            state.blue_champions = self.blue_champions.union(action)
+            state.blue_champions = self.blue_champions.union(action) # de gekozen action (een champion) wordt uitgevoerd en aan blue_champions toegevoegd
         else:
             state.red_champions = self.red_champions.union(action)
         return state
