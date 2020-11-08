@@ -102,14 +102,14 @@ def lrModel(s):
     Hier wordt de reward voor red-side uitgerekend met het LR model.
     """
     vector = stateToVector(s)
-    # blue_win_rate = model.predict([vector]) #probeer dit ook nog met predict_proba te doen, misschien werkt reward fan beter
-    # if blue_win_rate == 1:
-    #     return 0
-    # else:
-    #     return 1
+    blue_win_rate = model.predict([vector]) #probeer dit ook nog met predict_proba te doen, misschien werkt reward fan beter
+    if blue_win_rate == 1:
+        return 0
+    else:
+        return 1
     
-    blue_win_rate = model.predict_proba([vector])[0][0]
-    return blue_win_rate
+    # blue_win_rate = model.predict_proba([vector])[0][0]
+    # return blue_win_rate
 
 def expand(node):
     """
@@ -206,5 +206,5 @@ def backup(node, delta):
     while node != None:
         node.visit_count += 1 # N(v)
         node.total_sim_reward += delta # Q(v)
-        delta = -1 * delta # reward
+        # delta = -1 * delta # reward
         node = node.parent # v
