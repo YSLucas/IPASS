@@ -112,7 +112,8 @@ def lrModel(s):
 
 def expand(node):
     """
-    
+    expand genereert child nodes voor een node.
+
     Variables:
     v, v', a, s, 
     """
@@ -127,20 +128,11 @@ def bestChild(node, c):
     Variables:
     v, v', N(v), N(v'), Q(v'), c
     
-    return: 
+    Psuedocode bestChild:
     max(   
             ( Q(v') / N(v') ) +  c *  sqrt( ( 2ln N(v) ) / N(v') ) 
         )
     """
-    # child = node.children # [v']
-    # res = []
-    # for x in child:
-    #     res.append(
-    #     (x.total_sim_reward / x.visit_count) # exploitation
-    #     + c * np.sqrt( (2 * np.log(node.visit_count) ) / x.visit_count) # exploration
-    #     ) 
-    
-    # return max(res)
     child = node.children
     maxC = max(child, key=lambda x: 
                                 (x.total_sim_reward / x.visit_count)      # exploitation
@@ -149,7 +141,9 @@ def bestChild(node, c):
 
 def treePolicy(node):
     """
-    variables:
+    treePolicy 
+
+    Variables:
     v, c
     """
     while node.state.terminal_state() is False:
@@ -163,6 +157,8 @@ def treePolicy(node):
 
 def defaultPolicy(s):
     """
+    defaultPolicy kiest een random terminal state en geeft een reward terug met het LR model.
+
     Variables:
     s, a
     """
@@ -174,8 +170,10 @@ def defaultPolicy(s):
 
 def uctSearch(budget, root):
     """
-    Variables:
+    Vanaf deze functie wordt de UCT search uitgevoerd.
 
+    Variables:
+    v0, v1, △
     """
     timer_start = time.time()
     depth = 0
@@ -190,6 +188,7 @@ def uctSearch(budget, root):
     # print(depth)
     return bestChild(root_node, 0)   # return bestChild van root 
     
+    # deze snippet kan gebruikt worden om te stoppen bij een maximaal aantal iterations ipv tijd.
     # while budget > depth:
     #     v1 = treePolicy(root_node) #return best child
     #     delta = defaultPolicy(v1.state) # geeft reward van bestChild van node v1
@@ -199,8 +198,9 @@ def uctSearch(budget, root):
 
 def backup(node, delta):
     """
+    Gaat vanaf een end-node terug naar de root en update bij elke parent de visit_count en total_sim_reward.
     Variables:
-    v, delta, N(v), Q(v)
+    v, △, N(v), Q(v)
     """
     while node != None:
         node.visit_count += 1 # N(v)
