@@ -8,7 +8,8 @@ from copy import copy
 import math
 
 MODEL_PATH = 'models/lr_model_1.pkl'
-EXPLORATION_C = (2**-4)
+EXPLORATION_C = (2**-6)
+# EXPLORATION_C = 1 / np.sqrt(2)
 model = pickle.load(open(MODEL_PATH, 'rb'))
 champions = set(range(0, 150)) # 150 champions
 
@@ -33,7 +34,6 @@ class Draft:
         self.blue_moves_next = blue_moves_next
         self.blue_champions = blue_champions # list van champion id's [2, 33, 45] = champion 2; 33 en 45
         self.red_champions = red_champions # list van champion id's, ook van 1 tm 150; zodat get_actions beter werkt.
-        # self.move_count = move_count
         self.actions = None
 
     def terminal_state(self):
@@ -80,7 +80,6 @@ class Mcts:
         self.total_sim_reward = total_sim_reward # Q(v)
         self.visit_count = visit_count # N(v)
         self.children = []
-        self.tried_actions = set()
         self.remaining_actions = copy(self.state.get_actions())
 
 def stateToVector(s):
@@ -144,8 +143,8 @@ def bestChild(node, c):
     # return max(res)
     child = node.children
     maxC = max(child, key=lambda x: 
-                                x.total_sim_reward / x.visit_count 
-                                + c * math.sqrt( 2 * np.log(node.visit_count) / x.visit_count))
+                                (x.total_sim_reward / x.visit_count)      # exploitation
+                                + c * math.sqrt( ( 2 * np.log(node.visit_count) )/ x.visit_count))  # exploration
     return maxC
 
 def treePolicy(node):
