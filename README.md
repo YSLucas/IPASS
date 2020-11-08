@@ -7,6 +7,9 @@ League of Legends is een populaire computer game waarbij 10 spelers verdeeld in 
 ## Wat is MCTS drafter?
 MCTS drafter is een programma dat zich focussed op de Draft. Met het MCTS UCT algoritme probeert deze applicatie de beste champion te kiezen op het moment dat er om gevraagd wordt, en neemt de eerder gekozen champions mee in deze beslissing. Met MCTS drafter speel je tegen het algoritme.
 
+## Start applicatie
+Run `Play_draft.py` om de applicatie te starten.
+
 ## Data
 Er waren een aantal dingen die ik nodig had in de data om een model te kunnen trainen:
 * Champions team blauw
