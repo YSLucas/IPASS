@@ -6,11 +6,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 
 
-pd.set_option('display.max_rows', None)
+# pd.set_option('display.columns', None)
 
 def getDummies(filename):
     """
-        Maakt een vector die kan worden gebruikt voor logistische regressie
+    Maakt een vector die kan worden gebruikt voor logistische regressie
     """
     #   Maakt een dataframe van .csv met data
     df = pd.read_csv(filename + '.csv')
@@ -28,12 +28,15 @@ def getDummies(filename):
     result = pd.concat([mergedDummies, dummie], axis=1)
     # print(dummieTeam1.iloc[1])
     # print(dummieTeam2.iloc[1])
-    # print(result.sample(4))
+    # print(result.sample(1))
+    print(list(result.columns))
     return result
 
 
 def getModel(filename):
-
+    """
+    Traint een logistisch regressie model en slaat dat model op.
+    """
     gameData = getDummies(filename)
     X_train, X_test, y_train, y_test = train_test_split(gameData.drop("result_Victory", axis=1), gameData["result_Victory"])
     model = LogisticRegression()
@@ -47,7 +50,7 @@ def getModel(filename):
 
 
 # getModel("gamesCombined-CLEANv3")
-gameData = getDummies("gamesCombined-CLEANv3")
+# gameData = getDummies("gamesCombined-CLEANv3")
 
 
 # c_l = list(gameData.columns)
@@ -58,8 +61,8 @@ gameData = getDummies("gamesCombined-CLEANv3")
 # model = LogisticRegression()
 # model.fit(X_train, y_train)
 # print(model.score(X_test, y_test))
-print(np.zeros((1, 5)))
-print(set(range(0, 6)))
+# print(np.zeros((1, 5)))
+# print(set(range(0, 6)))
 
 # print(set(range(1, 151)))
 # model.predict()

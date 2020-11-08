@@ -1,78 +1,67 @@
 import MonteCarlo
+from MonteCarlo import stateToVector
 import pickle
 import numpy as np
 import itertools
 from Champions.champions import champion_names
 
-TIME_LIMIT = 45
+TIME_LIMIT = 45     # tijd dat MCTS krijgt om de beste champion te zoeken
 model = pickle.load(open('models/lr_model_1.pkl', 'rb'))
 
-champion_name_dict = champion_names()
-
-# model test
-
-# blue_vector = [0] * 150
-# red_vector = [0] * 150
-# b_c = [0, 4, 2, 7, 3]
-# r_c = [66, 44, 88, 101, 111]
-# for hero_blue in b_c:
-#     blue_vector[hero_blue] = 1
-# for hero_red in r_c:
-#     red_vector[hero_red] = 1
-# combined = blue_vector + red_vector
-# print(model.predict_proba([combined])) # laat % kans zien van de voorspelling. [0.22, 0,78] = 22% kans op 0, 78% kans op 1
-# print(model.predict([combined])) # 1 is blue win in dit geval
-
-# champions = set(range(1, 20)) # 150 champions * 2
-# blue_champions = set()
-# red_champions = set()
-# remaining_champions = champions
-# actionList = []
-# actions = itertools.permutations(remaining_champions, (4))
-# for a in actions:
-#     actionList.append(a)
-# print(actionList[1])
+champion_dict = champion_names()
+champion_dict_index = champion_dict[0]  # key = index           value = champion name
+champion_dict_names = champion_dict[1]  # key = champion name   value = index
+# print(champion_dict_index)
 
 
 def Drafter():
+    """
+    Start een game en speel tegen een bot.
+    """
 
-    node = MonteCarlo.Mcts(MonteCarlo.Draft())
-
-    blue_turn = True
+    node = MonteCarlo.Mcts(MonteCarlo.Draft()) # set initial node (root)
 
     while node.state.terminal_state() is False:
-        # choices = node.state.get_actions()
-	    # choices_sets = [set(i) for i in choices]
 
-        move = node.state.move_count # number of which move were on
         set_blue_champs = set()
 
         while True:
-            pick_blue = int(input('Kies een Champion (getal tussen 1 en 150)'))
-            if (pick_blue in node.state.blue_champions) or (pick_blue in node.state.red_champions):
-                print('Deze champion is al gekozen')
-                continue
-            elif (pick_blue > 149) or (pick_blue < 0):
-                print('Deze champion bestaat niet')
-                continue        
+            # recc_champion = MonteCarlo.uctSearch(140, node)
+            # recc_champion = recc_champion.state.blue_champions
+            # print(recc_champion)
+            # recc_champion = champion_dict_index[list(recc_champion)[0]]
+            # print(recc_champion)
+            while True:     # in deze while-loop kiest de speler een champion d.m.v. champion naam
+                try:
+                    pick_blue = input('Kies een champion: ')
+                    pick_blue_index = champion_dict_names[pick_blue.lower()] # haal de index van gekozen champion op
+                    break
+                except KeyError:
+                    print('Deze champion bestaat niet.')
+
+            if (pick_blue_index in node.state.blue_champions) or (pick_blue_index in node.state.red_champions):     # check of champion al gekozen in.
+                print('Deze champion is al gekozen.')
+                continue      
             else:
                 break
         
         
-        set_blue_champs.add(pick_blue)
-        print(set_blue_champs)
-        print(type(set_blue_champs))
-        node = MonteCarlo.Mcts(node.state.get_next_state(set_blue_champs))
+        set_blue_champs.add(pick_blue_index) 
+        node = MonteCarlo.Mcts(node.state.get_next_state(set_blue_champs))      # update game-state met champion pick door speler
         
-        res = MonteCarlo.uctSearch(140, node)
-        see = (res.state.blue_champions, res.state.red_champions )
-        node = MonteCarlo.Mcts(node.state.get_next_state(see[1]))
+        pick_red = MonteCarlo.uctSearch(5, node)    # Run MCTS om een champion te krijgen voor red-side
+        now_state = (pick_red.state.blue_champions, pick_red.state.red_champions )
+        node = MonteCarlo.Mcts(node.state.get_next_state(now_state[1]))     # update game-state met champion pick door MCTS
 
-        print(f'Bue side: {node.state.blue_champions} \nRed side: {node.state.red_champions}')
+        print(f'Blue side: {[champion_dict_index[i] for i in node.state.blue_champions]} \nRed side: {[champion_dict_index[i] for i in node.state.red_champions]}')
 
-    b_champs_to_name = [champion_name_dict[i] for i in node.state.blue_champions]
-    r_champs_to_name = [champion_name_dict[i] for i in node.state.red_champions]
+    b_champs_to_name = [champion_dict_index[i] for i in node.state.blue_champions]
+    r_champs_to_name = [champion_dict_index[i] for i in node.state.red_champions]
 
     print(f'Bue side: {b_champs_to_name} \nRed side: {r_champs_to_name}')
+    combined = stateToVector(node.state)
+    predicted_wr = model.predict_proba([combined])  # geeft voorspelling over wie game gaat winnen met LR-model die ook gebruikt wordt in MCTS
+
+    print(f'De kans dat Blue wint met dit team is {round(100 * predicted_wr[0][1], 2)}%. \nDe kans dat Red wint is {round(100 * predicted_wr[0][0], 2)}%.')
 
 Drafter()
