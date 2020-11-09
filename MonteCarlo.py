@@ -220,7 +220,6 @@ def backup(node, delta):
     while node != None:
         node.visit_count += 1 # N(v)
         node.total_sim_reward += delta # Q(v)
-        delta = 1 - delta # reward
         if delta == 1:
             delta = 0
         elif delta == 0:
