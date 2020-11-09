@@ -5,7 +5,7 @@ import numpy as np
 from Champions.champions import champion_names
 from copy import deepcopy
 
-TIME_LIMIT = 45     # tijd dat MCTS krijgt om de beste champion te zoeken
+TIME_LIMIT = 30     # tijd dat MCTS krijgt om de beste champion te zoeken
 model = pickle.load(open('models/lr_model_1.pkl', 'rb'))
 
 champion_dict = champion_names()
@@ -58,7 +58,7 @@ def Drafter():
         set_blue_champs.add(pick_blue_index) 
         node = MonteCarlo.Mcts(node.state.get_next_state(set_blue_champs))      # update game-state met champion pick door speler
         
-        pick_red = MonteCarlo.uctSearch(5, node, 'red')    # Run MCTS om een champion te krijgen voor red-side
+        pick_red = MonteCarlo.uctSearch(10, node, 'red')    # Run MCTS om een champion te krijgen voor red-side
         now_state = (pick_red.state.blue_champions, pick_red.state.red_champions )
         node = MonteCarlo.Mcts(node.state.get_next_state(now_state[1]))     # update game-state met champion pick door MCTS
 

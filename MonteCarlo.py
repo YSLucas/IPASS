@@ -8,7 +8,7 @@ from copy import deepcopy
 import math
 
 MODEL_PATH = 'models/lr_model_1.pkl'
-EXPLORATION_C = (2**-6)
+EXPLORATION_C = (2**-5)
 # EXPLORATION_C = 1 / np.sqrt(2)
 model = pickle.load(open(MODEL_PATH, 'rb'))
 champions = set(range(0, 150)) # 150 champions
@@ -142,9 +142,20 @@ def bestChild(node, c):
                                 + c * math.sqrt( ( 2 * np.log(node.visit_count) )/ x.visit_count))  # exploration
     return maxC
 
+def mostVisited(node):
+    """
+    i.p.v. best child te bepalen door de formule nog een keer te gebruiken kan je ook de meest bezochte node geven als beste volgende actie.
+    Het verschil tussen deze manier and bestChild() manier is niet groot. 
+    (source: http://ccg.doc.gold.ac.uk/ccg_old/papers/browne_tciaig12_1.pdf)
+    """
+    child = node.children
+    mostV = max(child, key=lambda x: x.visit_count)
+    # print(f'Visit count: {mostV.visit_count}')
+    return mostV
+
 def treePolicy(node):
     """
-    treePolicy 
+    treePolicy selecteert of maakt een node vanaf een gegeven al bestaande node.
 
     Variables:
     v, c
@@ -160,7 +171,7 @@ def treePolicy(node):
 
 def defaultPolicy(s, side):
     """
-    defaultPolicy kiest een random terminal state en geeft een reward terug met het LR model.
+    Simuleert een gegeven node tot een terminal state en geeft een reward van de terminal state
 
     Variables:
     s, a
@@ -187,9 +198,10 @@ def uctSearch(budget, root, side):
         delta = defaultPolicy(v1.state, side)     # geeft reward van bestChild van node v1
         backup(v1, delta)   # gaat terug in de boom om nodes te updaten
         depth += 1
-        time.sleep(0.01)
-    # print(depth)
-    return bestChild(root_node, 0)   # return bestChild van root 
+        # time.sleep(0.001)
+    # print(f'Iterations: {depth}')
+    # return bestChild(root_node, 0)   # return bestChild van root 
+    return mostVisited(root_node)      # bestChild gebaseerd op meest bezochte node
     
     # deze snippet kan gebruikt worden om te stoppen bij een maximaal aantal iterations ipv tijd.
     # while budget > depth:
@@ -208,5 +220,9 @@ def backup(node, delta):
     while node != None:
         node.visit_count += 1 # N(v)
         node.total_sim_reward += delta # Q(v)
-        # delta = -1 * delta # reward
+        delta = 1 - delta # reward
+        if delta == 1:
+            delta = 0
+        elif delta == 0:
+            delta = 1
         node = node.parent # v
