@@ -4,7 +4,7 @@ import numpy as np
 import time
 import pickle
 import itertools
-from copy import copy
+from copy import deepcopy
 import math
 
 MODEL_PATH = 'models/lr_model_1.pkl'
@@ -80,7 +80,7 @@ class Mcts:
         self.total_sim_reward = total_sim_reward # Q(v)
         self.visit_count = visit_count # N(v)
         self.children = []
-        self.remaining_actions = copy(self.state.get_actions())
+        self.remaining_actions = deepcopy(self.state.get_actions())
 
 def stateToVector(s):
     """
@@ -96,16 +96,19 @@ def stateToVector(s):
     combined = blue_vector + red_vector
     return combined
 
-def lrModel(s):
+def lrModel(s, side):
     """
     Hier wordt de reward voor red-side uitgerekend met het LR model.
     """
     vector = stateToVector(s)
-    blue_win_rate = model.predict([vector]) #probeer dit ook nog met predict_proba te doen, misschien werkt reward fan beter
-    if blue_win_rate == 1:
-        return 0
+    blue_win_rate = model.predict([vector])
+    if side == 'blue':
+        return blue_win_rate
     else:
-        return 1
+        if blue_win_rate == 1:  # als MCTS door red-side wordt uitgevoerd zijn de rewards omgedraaid (blue_win_rate == 1 is een verlies, 0, voor red)
+            return 0
+        else:
+            return 1
     
     # blue_win_rate = model.predict_proba([vector])[0][0]
     # return blue_win_rate
@@ -155,7 +158,7 @@ def treePolicy(node):
             # node_v = bestChild(node, c)
     return node
 
-def defaultPolicy(s):
+def defaultPolicy(s, side):
     """
     defaultPolicy kiest een random terminal state en geeft een reward terug met het LR model.
 
@@ -166,9 +169,9 @@ def defaultPolicy(s):
         pre = s.get_actions() # verzamel actions van state s
         a = random.choice(pre) # kies random action 
         s = s.get_next_state(a) # krijg volgende state
-    return lrModel(s) # bereken reward van state s
+    return lrModel(s, side) # bereken reward van state s
 
-def uctSearch(budget, root):
+def uctSearch(budget, root, side):
     """
     Vanaf deze functie wordt de UCT search uitgevoerd.
 
@@ -181,7 +184,7 @@ def uctSearch(budget, root):
 
     while time.time() < (budget + timer_start):
         v1 = treePolicy(root_node)      # return best child
-        delta = defaultPolicy(v1.state)     # geeft reward van bestChild van node v1
+        delta = defaultPolicy(v1.state, side)     # geeft reward van bestChild van node v1
         backup(v1, delta)   # gaat terug in de boom om nodes te updaten
         depth += 1
         time.sleep(0.01)

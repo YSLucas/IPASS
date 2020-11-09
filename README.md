@@ -5,7 +5,7 @@ Door Lucas Siekkötter
 League of Legends is een populaire computer game waarbij 10 spelers verdeeld in 2 teams tegens elkaar spelen. Elke speler speelt met een zelf gekozen champion (in-game character). Welke champion je kiest kan een grote invloed zijn op de uitkomst van het spel, vooral op hoger niveau. De fase waar je je champion keuze maakt is dan ook een belangerijke onderdeel van het spel. Deze fase heet de Draft. Beide teams mogen om en om één champion kiezen.
 
 ## Wat is MCTS drafter?
-MCTS drafter is een programma dat zich focussed op de Draft. Met het MCTS UCT algoritme probeert deze applicatie de beste champion te kiezen op het moment dat er om gevraagd wordt, en neemt de eerder gekozen champions mee in deze beslissing. Met MCTS drafter speel je tegen het algoritme.
+MCTS drafter is een programma dat zich focussed op de Draft. Met het MCTS UCT algoritme probeert deze applicatie de beste champion te kiezen op het moment dat er om gevraagd wordt, en neemt de eerder gekozen champions mee in deze beslissing. Met MCTS drafter speel je tegen het algoritme. Maar tijdens jouw beurt krijg je ook een suggestie over wat het algoritme denk welke champion jij het beste kunt kiezen.
 
 ## Start applicatie
 Run `Play_draft.py` om de applicatie te starten.
