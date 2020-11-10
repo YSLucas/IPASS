@@ -103,15 +103,15 @@ def lrModel(s, side):
     vector = stateToVector(s)
     blue_win_rate = model.predict([vector])
     if side == 'blue':
-        return blue_win_rate
+        if blue_win_rate == 0:
+            return (-1)
+        else:
+            return blue_win_rate
     else:
         if blue_win_rate == 1:  # als MCTS door red-side wordt uitgevoerd zijn de rewards omgedraaid (blue_win_rate == 1 is een verlies, 0, voor red)
-            return 0
+            return (-1)
         else:
             return 1
-    
-    # blue_win_rate = model.predict_proba([vector])[0][0]
-    # return blue_win_rate
 
 def expand(node):
     """
@@ -199,11 +199,14 @@ def uctSearch(budget, root, side):
         backup(v1, delta)   # gaat terug in de boom om nodes te updaten
         depth += 1
         # time.sleep(0.001)
+        
     # print(f'Iterations: {depth}')
+
     # return bestChild(root_node, 0)   # return bestChild van root 
     return mostVisited(root_node)      # bestChild gebaseerd op meest bezochte node
     
     # deze snippet kan gebruikt worden om te stoppen bij een maximaal aantal iterations ipv tijd.
+
     # while budget > depth:
     #     v1 = treePolicy(root_node) #return best child
     #     delta = defaultPolicy(v1.state) # geeft reward van bestChild van node v1
@@ -219,9 +222,7 @@ def backup(node, delta):
     """
     while node != None:
         node.visit_count += 1 # N(v)
-        node.total_sim_reward += delta # Q(v)
-        if delta == 1:
-            delta = 0
-        elif delta == 0:
-            delta = 1
+        # node.total_sim_reward += delta # Q(v)
+        node.total_sim_reward = node.total_sim_reward + delta  # Q(v)
+        delta = -1 * delta
         node = node.parent # v
