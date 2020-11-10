@@ -20,6 +20,8 @@ def getDummies(filename):
     dummie = pd.get_dummies(df, columns=['result'], drop_first=True)
     dummie = dummie.drop(['server', 'mmr', 'timestamp', 'team_1', 'team_2'], axis='columns')
 
+    # print(dummie.head())
+
     #   Deze code zorgt ervoor dat de LoL-karakters later op de juiste ingedeeld kunnen worden
     dummieTeam1 = df['team_1'].str.get_dummies(sep=',')
     dummieTeam2 = df['team_2'].str.get_dummies(sep=',')
@@ -65,10 +67,10 @@ def getModel(filename):
 
     # findBestModel(model, X_train, y_train, X_test, y_test)
 
-    model.fit(X_train, y_train)
-    print(model.score(X_test, y_test))
+    model.fit(X, y)
+    # print(model.score(X_test, y_test))
 
-    saveFileName = "lr_model_4_optimal.pkl"
+    saveFileName = "lr_model_5.pkl"
     with open(saveFileName, 'wb') as file:
         pickle.dump(model, file)
 

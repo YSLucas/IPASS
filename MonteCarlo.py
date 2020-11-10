@@ -7,9 +7,10 @@ import itertools
 from copy import deepcopy
 import math
 
-MODEL_PATH = 'models/lr_model_1.pkl'
-EXPLORATION_C = (2**-5)
-# EXPLORATION_C = 1 / np.sqrt(2)
+MODEL_PATH = 'models/lr_model_2_balanced.pkl'
+# EXPLORATION_C = (2**-2)
+EXPLORATION_C = 1 / np.sqrt(2)
+# EXPLORATION_C = 2
 model = pickle.load(open(MODEL_PATH, 'rb'))
 champions = set(range(0, 150)) # 150 champions
 
@@ -30,8 +31,8 @@ Q(v) = total simulation reward
 
 class Draft:
     
-    def __init__(self, blue_moves_next=True, blue_champions=set(), red_champions=set()):
-        self.blue_moves_next = blue_moves_next
+    def __init__(self, blue_move=True, blue_champions=set(), red_champions=set()):
+        self.blue_move = blue_move
         self.blue_champions = blue_champions # list van champion id's [2, 33, 45] = champion 2; 33 en 45
         self.red_champions = red_champions # list van champion id's, ook van 1 tm 150; zodat get_actions beter werkt.
         self.actions = None
@@ -59,10 +60,10 @@ class Draft:
 
     def get_next_state(self, action):
         """
-        Maakr volgende game-state aan de hand vorige game-state en actie die wordt genomen.
+        Maakrt volgende game-state aan de hand vorige game-state en actie die wordt genomen.
         """
-        state = Draft(not self.blue_moves_next, self.blue_champions, self.red_champions)
-        if self.blue_moves_next:
+        state = Draft(not self.blue_move, self.blue_champions, self.red_champions)
+        if self.blue_move:
             # print(action)
             state.blue_champions = self.blue_champions.union(action) # de gekozen action (een champion) wordt uitgevoerd en aan blue_champions toegevoegd
         else:
@@ -81,6 +82,7 @@ class Mcts:
         self.visit_count = visit_count # N(v)
         self.children = []
         self.remaining_actions = deepcopy(self.state.get_actions())
+
 
 def stateToVector(s):
     """
@@ -101,17 +103,35 @@ def lrModel(s, side):
     Hier wordt de reward voor red-side uitgerekend met het LR model.
     """
     vector = stateToVector(s)
-    blue_win_rate = model.predict([vector])
+
+    # onderstaande snippet is om predict_proba te gebruiken om rewards uit te rekenen.
+    # ik heb deze versie gemaakt zodat kleine wins (bijv. 51% kans) niet evenzwaar meetellen als 70% kans wins
+
+    blue_win_rate = model.predict_proba([vector])[0]
     if side == 'blue':
-        if blue_win_rate == 0:
-            return (-1)
+        if blue_win_rate[1] > blue_win_rate[0]: # [1] is % kans uitkomst is 1, [0] % kans op 0
+            return (blue_win_rate[1], 0)  # (reward van kant die algoritme uitvoert, reward tegenstander)
         else:
-            return blue_win_rate
+            return (0, blue_win_rate[0])
     else:
-        if blue_win_rate == 1:  # als MCTS door red-side wordt uitgevoerd zijn de rewards omgedraaid (blue_win_rate == 1 is een verlies, 0, voor red)
-            return (-1)
+        if blue_win_rate[1] > blue_win_rate[0]:
+            return (0, blue_win_rate[1])
         else:
-            return 1
+            return (blue_win_rate[0], 0)
+
+    # onderstaande snippet is de originele code om rewards uit te rekenen    
+
+    # blue_win_rate = model.predict([vector])
+    # if side == 'blue':
+    #     if blue_win_rate == 0:
+    #         return blue_win_rate
+    #     else:
+    #         return blue_win_rate
+    # else:
+    #     if blue_win_rate == 1:  # als MCTS door red-side wordt uitgevoerd zijn de rewards omgedraaid (blue_win_rate == 1 is een verlies, 0, voor red)
+    #         return 0
+    #     else:
+    #         return 1
 
 def expand(node):
     """
@@ -139,7 +159,7 @@ def bestChild(node, c):
     child = node.children
     maxC = max(child, key=lambda x: 
                                 (x.total_sim_reward / x.visit_count)      # exploitation
-                                + c * math.sqrt( ( 2 * np.log(node.visit_count) )/ x.visit_count))  # exploration
+                                + (c) * np.sqrt( ( 2 * np.log(node.visit_count) )/ x.visit_count))  # exploration
     return maxC
 
 def mostVisited(node):
@@ -149,8 +169,8 @@ def mostVisited(node):
     (source: http://ccg.doc.gold.ac.uk/ccg_old/papers/browne_tciaig12_1.pdf)
     """
     child = node.children
-    mostV = max(child, key=lambda x: x.visit_count)
-    # print(f'Visit count: {mostV.visit_count}')
+    mostV = max(child, key=lambda x: x.total_sim_reward)
+    print(f'Visit count: {mostV.visit_count}. Total reward: {mostV.total_sim_reward}')
     return mostV
 
 def treePolicy(node):
@@ -176,6 +196,7 @@ def defaultPolicy(s, side):
     Variables:
     s, a
     """
+    # b_r = not s.blue_move
     while s.terminal_state() is False:
         pre = s.get_actions() # verzamel actions van state s
         a = random.choice(pre) # kies random action 
@@ -196,11 +217,11 @@ def uctSearch(budget, root, side):
     while time.time() < (budget + timer_start):
         v1 = treePolicy(root_node)      # return best child
         delta = defaultPolicy(v1.state, side)     # geeft reward van bestChild van node v1
-        backup(v1, delta)   # gaat terug in de boom om nodes te updaten
+        backup(v1, delta, side)   # gaat terug in de boom om nodes te updaten
         depth += 1
         # time.sleep(0.001)
-        
-    # print(f'Iterations: {depth}')
+
+    print(f'Iterations: {depth}')
 
     # return bestChild(root_node, 0)   # return bestChild van root 
     return mostVisited(root_node)      # bestChild gebaseerd op meest bezochte node
@@ -214,15 +235,25 @@ def uctSearch(budget, root, side):
     #     depth += 1
     # return bestChild(root_node, 0) #return bestChild van root     
 
-def backup(node, delta):
+def backup(node, delta, side):
     """
     Gaat vanaf een end-node terug naar de root en update bij elke parent de visit_count en total_sim_reward.
     Variables:
     v, △, N(v), Q(v)
     """
+    delta_copy = delta
+    index_delta = 0
+    delta = delta[0]
+    
     while node != None:
         node.visit_count += 1 # N(v)
         # node.total_sim_reward += delta # Q(v)
         node.total_sim_reward = node.total_sim_reward + delta  # Q(v)
-        delta = -1 * delta
+        # if delta == 1:
+        #     delta = 0
+        # elif delta == 0:
+        #     delta = 1
+        index_delta = 1 - index_delta
+        delta = delta_copy[index_delta]
+
         node = node.parent # v
