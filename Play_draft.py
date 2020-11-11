@@ -17,7 +17,7 @@ def championReccomender(x_node, dont_reccomend):
     """
     Deze functie gebruikt het MCTS algoritme om een champion aan te raden aan de speler.
     """
-    recc_champion = MonteCarlo.uctSearch(3, x_node, 'blue')
+    recc_champion = MonteCarlo.uctSearch(4, x_node)
     recc_champion = recc_champion.state.blue_champions
     recc_champion = list(set(recc_champion).difference(dont_reccomend))
     print(f'MCTS raadt aan om {champion_dict_index[recc_champion[0]]} te kiezen.')
@@ -34,8 +34,8 @@ def Drafter():
 
         set_blue_champs = set()
 
-        node_copy = deepcopy(node) 
-        championReccomender(node_copy, dont_recc)
+        # node_copy = deepcopy(node) 
+        # championReccomender(node_copy, dont_recc)
 
         while True:
 
@@ -58,7 +58,7 @@ def Drafter():
         set_blue_champs.add(pick_blue_index) 
         node = MonteCarlo.Mcts(node.state.get_next_state(set_blue_champs))      # update game-state met champion pick door speler
         
-        pick_red = MonteCarlo.uctSearch(15, node, 'red')    # Run MCTS om een champion te krijgen voor red-side
+        pick_red = MonteCarlo.uctSearch(20, node)    # Run MCTS om een champion te krijgen voor red-side
         now_state = (pick_red.state.blue_champions, pick_red.state.red_champions )
         node = MonteCarlo.Mcts(node.state.get_next_state(now_state[1]))     # update game-state met champion pick door MCTS
 
